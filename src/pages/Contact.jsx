@@ -2,14 +2,55 @@ import { useState } from 'react'
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+  const [resume, setResume] = useState(null)
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleFileChange = (e) => {
+    setResume(e.target.files[0])
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    alert('Thank you! We will get back to you soon. (This is a demo – form is not connected to a backend.)')
+    setLoading(true)
+
+    try {
+      // 1. Send to Web3Forms (Gmail)
+      const formData = new FormData(e.target)
+      formData.append("access_key", "YOUR_ACCESS_KEY_HERE") // User will replace this or I'll explain
+      
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        // 2. Save to local Admin data
+        const submission = {
+          ...form,
+          resumeName: resume ? resume.name : 'No resume',
+          date: new Date().toLocaleString(),
+          id: Date.now()
+        }
+        const existingSubmissions = JSON.parse(localStorage.getItem('formSubmissions') || '[]')
+        localStorage.setItem('formSubmissions', JSON.stringify([submission, ...existingSubmissions]))
+
+        alert('Thank you! Your message and resume have been sent to Gmail and saved in Admin.')
+        setForm({ name: '', email: '', subject: '', message: '' })
+        setResume(null)
+        e.target.reset()
+      } else {
+        alert('Oops! Something went wrong. Please try again.')
+      }
+    } catch (error) {
+      alert('Error sending form. Please check your connection.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -35,7 +76,7 @@ export default function Contact() {
               <p>Monday – Saturday: 10.00 – 05.00<br />Sunday: Closed</p>
             </div>
             <div>
-              <h3 className="section-title" style={{ fontSize: '1.25rem', textAlign: 'left' }}>Send a Message</h3>
+              <h3 className="section-title" style={{ fontSize: '1.25rem', textAlign: 'left' }}>Send a Message & Resume</h3>
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label htmlFor="name">Name</label>
@@ -50,10 +91,16 @@ export default function Contact() {
                   <input id="subject" name="subject" type="text" value={form.subject} onChange={handleChange} placeholder="Subject" />
                 </div>
                 <div className="form-group">
+                  <label htmlFor="resume">Upload Resume (PDF/DOC)</label>
+                  <input id="resume" name="resume" type="file" onChange={handleFileChange} required accept=".pdf,.doc,.docx" />
+                </div>
+                <div className="form-group">
                   <label htmlFor="message">Message</label>
                   <textarea id="message" name="message" value={form.message} onChange={handleChange} required placeholder="Your message" />
                 </div>
-                <button type="submit" className="btn btn-primary">Send Message</button>
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? 'Sending...' : 'Send Message & Resume'}
+                </button>
               </form>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import About from './pages/About'
@@ -8,6 +8,7 @@ import Services from './pages/Services'
 import ServicePage from './pages/ServicePage'
 import JobDashboard from './pages/JobDashboard'
 import PostJob from './pages/PostJob'
+import Admin from './pages/Admin'
 
 function App() {
   return (
@@ -21,6 +22,8 @@ function App() {
         <Route path="/services/:slug" element={<ServicePage />} />
         <Route path="/jobs" element={<JobDashboard />} />
         <Route path="/jobs/post" element={<PostJob />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="*" element={<Home />} />
       </Routes>
     </Layout>
   )
